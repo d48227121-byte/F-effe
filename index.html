@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBI // SYSTEM SERVER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* FBI Theme Colors */
+            --fbi-bg: #0b0f19;
+            --fbi-panel: rgba(13, 22, 41, 0.92);
+            --fbi-blue: #00a2ff;
+            --fbi-cyan: #00f0ff;
+            --fbi-gold: #ffb703;
+            --fbi-border: rgba(0, 240, 255, 0.3);
+            --fbi-text: #d8f0ff;
+
+            /* Riddler Theme Colors */
+            --riddler-green: #00ff66;
+            --riddler-purple: #a82eff;
+            --riddler-dark: #070311;
+            --riddler-panel: rgba(22, 8, 38, 0.95);
+            --alert-red: #ff2a6d;
+
+            --font-mono: 'Share Tech Mono', 'Fira Code', 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--fbi-bg);
+            color: var(--fbi-text);
+            font-family: var(--font-mono);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.4s ease;
+        }
+
+        body.riddler-mode {
+            background-color: var(--riddler-dark);
+            color: var(--riddler-green);
+        }
+
+        /* CRT Overlay & Scanlines Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .crt-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            animation: crt-flicker 0.15s infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes crt-flicker {
+            0% { opacity: 0.96; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+
+        /* Modern Classic Cyber Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #060a14;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--fbi-panel);
+            border: 2px solid var(--fbi-cyan);
+            box-shadow: 0 0 35px rgba(0, 240, 255, 0.25);
+            padding: 35px;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-badge {
+            width: 75px;
+            height: 75px;
+            border: 3px solid var(--fbi-cyan);
+            border-radius: 50%;
+            margin: 0 auto 5px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--fbi-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .login-title {
+            color: #fff;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .login-subtitle {
+            color: var(--fbi-gold);
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            color: var(--fbi-cyan);
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            background: #020612;
+            border: 1px solid var(--fbi-blue);
+            color: #fff;
+            font-family: inherit;
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            outline: none;
+            letter-spacing: 1.5px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--fbi-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+        }
+
+        .login-hint {
+            font-size: 0.7rem;
+            color: rgba(216, 240, 255, 0.6);
+            margin-top: 2px;
+        }
+
+        .btn-primary {
+            background: var(--fbi-cyan);
+            color: #02050e;
+            border: none;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            letter-spacing: 1.5px;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px var(--fbi-cyan);
+            transform: translateY(-1px);
+        }
+
+        /* Main Workspace Container */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 12px;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        /* Top Header */
+        header {
+            background: var(--fbi-panel);
+            border: 1px solid var(--fbi-border);
+            padding: 10px 18px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.15);
+            transition: all 0.4s ease;
+        }
+
+        body.riddler-mode header {
+            background: var(--riddler-panel);
+            border-color: var(--riddler-purple);
+            box-shadow: 0 0 20px rgba(168, 46, 255, 0.3);
+        }
+
+        .fbi-identity {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .fbi-badge {
+            width: 44px;
+            height: 44px;
+            border: 2px solid var(--fbi-cyan);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--fbi-cyan);
+            font-size: 0.85rem;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        body.riddler-mode .fbi-badge {
+            border-color: var(--riddler-green);
+            color: var(--riddler-green);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+
+        .fbi-title {
+            font-size: 1.05rem;
+            letter-spacing: 2px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .fbi-subtext {
+            font-size: 0.72rem;
+            color: var(--fbi-gold);
+            letter-spacing: 1px;
+        }
+
+        body.riddler-mode .fbi-subtext {
+            color: var(--riddler-purple);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Riddler Question Mark Trigger Button */
+        .riddler-icon-btn {
+            background: rgba(168, 46, 255, 0.15);
+            border: 2px solid var(--riddler-purple);
+            color: var(--riddler-green);
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.25s ease;
+            position: relative;
+            box-shadow: 0 0 12px rgba(168, 46, 255, 0.4);
+            animation: pulse-question 2s infinite alternate;
+        }
+
+        @keyframes pulse-question {
+            0% { transform: scale(1); box-shadow: 0 0 8px rgba(168, 46, 255, 0.4); }
+            100% { transform: scale(1.08); box-shadow: 0 0 22px rgba(0, 255, 102, 0.85); }
+        }
+
+        .riddler-icon-btn:hover {
+            background: var(--riddler-purple);
+            color: #fff;
+            transform: scale(1.12);
+        }
+
+        .riddler-badge-count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--alert-red);
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            border: 1px solid #fff;
+        }
+
+        .mode-badge {
+            background: rgba(0, 162, 255, 0.12);
+            border: 1px solid var(--fbi-blue);
+            color: var(--fbi-cyan);
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        body.riddler-mode .mode-badge {
+            background: rgba(255, 42, 109, 0.15);
+            border-color: var(--alert-red);
+            color: var(--alert-red);
+            animation: pulse-alert 1.2s infinite alternate;
+        }
+
+        @keyframes pulse-alert {
+            from { box-shadow: 0 0 4px var(--alert-red); }
+            to { box-shadow: 0 0 12px var(--alert-red); }
+        }
+
+        /* Workspace Grid Layout */
+        .workspace {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (max-width: 900px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        /* Left Navigation Sidebar */
+        .sidebar {
+            background: var(--fbi-panel);
+            border: 1px solid var(--fbi-border);
+            border-radius: 4px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+            transition: all 0.4s ease;
+        }
+
+        body.riddler-mode .sidebar {
+            background: var(--riddler-panel);
+            border-color: rgba(168, 46, 255, 0.4);
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            color: var(--fbi-cyan);
+            border-bottom: 1px dashed var(--fbi-border);
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+        }
+
+        body.riddler-mode .sidebar-section-title {
+            color: var(--riddler-green);
+            border-bottom-color: rgba(0, 255, 102, 0.3);
+        }
+
+        .nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-btn {
+            background: rgba(0, 162, 255, 0.05);
+            border: 1px solid var(--fbi-border);
+            color: var(--fbi-text);
+            padding: 9px 12px;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-btn:hover:not(.disabled) {
+            background: rgba(0, 162, 255, 0.18);
+            border-color: var(--fbi-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+        }
+
+        .nav-btn.active {
+            background: var(--fbi-cyan);
+            color: #040914;
+            font-weight: bold;
+            border-color: var(--fbi-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+
+        body.riddler-mode .nav-btn {
+            background: rgba(0, 255, 102, 0.04);
+            border-color: rgba(0, 255, 102, 0.25);
+            color: var(--riddler-green);
+        }
+
+        body.riddler-mode .nav-btn:hover:not(.disabled) {
+            background: rgba(0, 255, 102, 0.15);
+            border-color: var(--riddler-green);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+        }
+
+        body.riddler-mode .nav-btn.active {
+            background: var(--riddler-green);
+            color: #000;
+            border-color: var(--riddler-green);
+            box-shadow: 0 0 14px rgba(0, 255, 102, 0.6);
+        }
+
+        .nav-btn.solved {
+            border-color: var(--fbi-gold) !important;
+            color: var(--fbi-gold) !important;
+        }
+
+        .nav-btn.disabled {
+            border-color: rgba(168, 46, 255, 0.3);
+            color: var(--riddler-purple);
+            background: rgba(168, 46, 255, 0.05);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 2px;
+            border: 1px solid;
+            font-weight: bold;
+        }
+
+        .tag.fbi { border-color: var(--fbi-cyan); color: var(--fbi-cyan); }
+        .tag.open { border-color: var(--riddler-green); color: var(--riddler-green); }
+        .tag.solved { border-color: var(--fbi-gold); color: var(--fbi-gold); }
+        .tag.locked { border-color: var(--riddler-purple); color: var(--riddler-purple); }
+
+        .audio-btn {
+            margin-top: auto;
+            background: rgba(0, 162, 255, 0.1);
+            border: 1px solid var(--fbi-blue);
+            color: var(--fbi-cyan);
+            padding: 8px;
+            font-family: inherit;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 3px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        body.riddler-mode .audio-btn {
+            background: rgba(168, 46, 255, 0.15);
+            border-color: var(--riddler-purple);
+            color: #d8b4fe;
+        }
+
+        /* Right Panel - Dossier Content Viewer */
+        .viewer-panel {
+            background: var(--fbi-panel);
+            border: 1px solid var(--fbi-border);
+            border-radius: 4px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.95);
+            transition: all 0.4s ease;
+        }
+
+        body.riddler-mode .viewer-panel {
+            background: var(--riddler-panel);
+            border-color: rgba(168, 46, 255, 0.4);
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--fbi-border);
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            font-size: 0.85rem;
+            color: var(--fbi-cyan);
+        }
+
+        body.riddler-mode .viewer-header {
+            border-bottom-color: rgba(0, 255, 102, 0.3);
+            color: var(--riddler-green);
+        }
+
+        .stamp-mark {
+            border: 2px solid var(--fbi-gold);
+            color: var(--fbi-gold);
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transform: rotate(-2deg);
+        }
+
+        body.riddler-mode .stamp-mark {
+            border-color: var(--riddler-purple);
+            color: var(--riddler-purple);
+        }
+
+        .file-text-area {
+            font-size: 0.92rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: var(--fbi-text);
+            flex: 1;
+        }
+
+        body.riddler-mode .file-text-area {
+            color: var(--riddler-green);
+        }
+
+        .riddle-card {
+            background: rgba(0, 255, 102, 0.06);
+            border-left: 4px solid var(--riddler-green);
+            padding: 14px;
+            margin: 12px 0;
+            font-size: 1rem;
+            color: var(--riddler-green);
+        }
+
+        /* Layout affiancato ed allineato per l'Enigma 6 */
+        .e6-layout {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 24px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .e6-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* Contenitore 3D per la carta */
+        .card-flip-container {
+            perspective: 1000px;
+            width: 220px;
+            aspect-ratio: 3 / 4;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .card-flipper {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .card-flip-container.flipped .card-flipper {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            border: 2px solid var(--riddler-green);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .card-back {
+            background: #e63946;
+            color: #ffffff;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(230, 57, 70, 0.6);
+        }
+
+        .card-back-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        /* Pannello Indizi ben strutturato */
+        .e6-clues-panel {
+            flex: 1;
+            background: rgba(0, 255, 102, 0.04);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            border-radius: 8px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .e6-clues-header {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--riddler-green);
+            border-bottom: 1px dashed rgba(0, 255, 102, 0.3);
+            padding-bottom: 6px;
+            letter-spacing: 1.5px;
+        }
+
+        .clue-row {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 3px solid var(--riddler-green);
+            padding: 10px 14px;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            letter-spacing: 0.8px;
+            color: #d0ffe0;
+        }
+
+        .clue-num {
+            color: var(--riddler-purple);
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .ascii-art {
+            font-family: monospace;
+            color: var(--fbi-cyan);
+            font-size: 0.72rem;
+            line-height: 1.1;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border: 1px dashed var(--fbi-border);
+            overflow-x: auto;
+        }
+
+        body.riddler-mode .ascii-art {
+            color: var(--riddler-green);
+            border-color: rgba(0, 255, 102, 0.3);
+        }
+
+        /* Bottom Terminal Bar */
+        .terminal-box {
+            background: #030814;
+            border: 1px solid var(--fbi-cyan);
+            border-radius: 4px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+            transition: all 0.4s ease;
+        }
+
+        body.riddler-mode .terminal-box {
+            background: #06020f;
+            border-color: var(--riddler-green);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+        }
+
+        .terminal-label {
+            font-size: 0.8rem;
+            color: var(--fbi-cyan);
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        body.riddler-mode .terminal-label {
+            color: var(--riddler-green);
+        }
+
+        .terminal-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .terminal-input-wrapper {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            background: #02050e;
+            border: 1px solid var(--fbi-cyan);
+            border-radius: 3px;
+            padding: 0 10px;
+        }
+
+        body.riddler-mode .terminal-input-wrapper {
+            border-color: var(--riddler-green);
+            background: #030108;
+        }
+
+        .prompt-symbol {
+            color: var(--fbi-cyan);
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 0.95rem;
+        }
+
+        body.riddler-mode .prompt-symbol {
+            color: var(--riddler-green);
+        }
+
+        .terminal-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--fbi-text);
+            font-family: inherit;
+            font-size: 1rem;
+            padding: 10px 0;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        body.riddler-mode .terminal-input {
+            color: var(--riddler-green);
+        }
+
+        .terminal-input::placeholder {
+            color: rgba(0, 240, 255, 0.35);
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 0.85rem;
+        }
+
+        body.riddler-mode .terminal-input::placeholder {
+            color: rgba(0, 255, 102, 0.35);
+        }
+
+        .submit-btn {
+            background: var(--fbi-cyan);
+            color: #02050b;
+            border: none;
+            padding: 0 22px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        body.riddler-mode .submit-btn {
+            background: var(--riddler-green);
+            color: #000;
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 0 14px var(--fbi-cyan);
+        }
+
+        body.riddler-mode .submit-btn:hover {
+            box-shadow: 0 0 14px var(--riddler-green);
+        }
+
+        .feedback-line {
+            font-size: 0.8rem;
+            min-height: 18px;
+        }
+
+        .feedback-line.error {
+            color: var(--alert-red);
+            text-shadow: 0 0 8px rgba(255, 42, 109, 0.6);
+        }
+
+        .feedback-line.success {
+            color: var(--fbi-gold);
+            text-shadow: 0 0 8px rgba(255, 183, 3, 0.8);
+        }
+
+        body.riddler-mode .feedback-line.success {
+            color: var(--riddler-green);
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.8);
+        }
+
+        /* Riddler Video / Vox Intercept Modal */
+        .riddler-video-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 1, 8, 0.96);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            padding: 20px;
+        }
+
+        .riddler-video-card {
+            border: 2px solid var(--riddler-green);
+            background: #0a0418;
+            padding: 24px;
+            max-width: 640px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 45px rgba(0, 255, 102, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .video-feed-box {
+            width: 100%;
+            height: 220px;
+            background: #000;
+            border: 1px solid var(--riddler-purple);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 25px rgba(168, 46, 255, 0.6);
+        }
+
+        #riddler-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch-text {
+            color: var(--riddler-green);
+            font-size: 1.25rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--riddler-green);
+        }
+
+        .subtitles-box {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px dashed var(--riddler-green);
+            padding: 12px;
+            font-size: 0.9rem;
+            color: #e0ffe8;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.4;
+        }
+
+        /* Generic Modal Overlay */
+        .unlock-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 5, 12, 0.93);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .unlock-card {
+            border: 2px solid var(--riddler-green);
+            background: #080312;
+            padding: 30px;
+            max-width: 650px;
+            width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.4);
+            text-align: center;
+        }
+
+        .unlock-card.fbi-win {
+            border-color: var(--fbi-gold);
+            box-shadow: 0 0 40px rgba(255, 183, 3, 0.5);
+            background: #040e1f;
+        }
+
+        .unlock-title {
+            color: var(--riddler-green);
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px var(--riddler-green);
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .unlock-card.fbi-win .unlock-title {
+            color: var(--fbi-gold);
+            text-shadow: 0 0 15px var(--fbi-gold);
+        }
+
+        .unlock-text {
+            color: #d1f7ff;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 22px;
+            text-align: left;
+        }
+
+        .glitch-shake {
+            animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+            40%, 60% { transform: translate3d(5px, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-badge">FBI</div>
+            <div class="login-title">NATIONAL CRIME SYSTEM</div>
+            <div class="login-subtitle">DIVISIONE INVESTIGATIVA DI AUSTIN</div>
+            
+            <div class="form-group">
+                <label class="form-label">IDENTIFICATIVO AGENTE</label>
+                <input type="text" id="login-agent" class="form-input" value="AGENTE F">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">CODICE DI ACCESSO / BADGE #</label>
+                <input type="password" id="login-pass" class="form-input" value="F-9982">
+                <div class="login-hint">Credenziali predefinite. Clicca per accedere.</div>
+            </div>
+
+            <button class="btn-primary" onclick="performLogin()">ACCEDI</button>
+            <div id="login-error" class="feedback-line error" style="margin-top: 5px;"></div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN WORKSPACE CONTAINER -->
+    <div class="app-container" id="main-app" style="display:none;">
+        <header>
+            <div class="fbi-identity">
+                <div class="fbi-badge" id="app-badge">FBI</div>
+                <div>
+                    <div class="fbi-title" id="app-title">FBI // AGENTE F</div>
+                    <div class="fbi-subtext" id="app-subtext">DATABASE - DIVISIONE INVESTIGATIVA DI AUSTIN</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- 3. ICONA OVERRIDE ENIGMISTA (?) -->
+                <button class="riddler-icon-btn" id="riddler-toggle-btn" onclick="handleRiddlerToggle()" title="Enigmista">
+                    ?
+                    <span class="riddler-badge-count" id="unsolved-count">6</span>
+                </button>
+                <div class="mode-badge" id="mode-status-badge">SYSTEM SERVER</div>
+                <button class="submit-btn" style="padding: 6px 12px; background: rgba(255,42,109,0.2); border: 1px solid var(--alert-red); color: var(--alert-red);" onclick="logout()">LOGOUT</button>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <!-- Sidebar Navigation -->
+            <div class="sidebar">
+                <!-- SECTION A: FBI Casefiles -->
+                <div id="section-fbi">
+                    <div class="sidebar-section-title">DOSSIER OMICIDIO BLACKWOOD</div>
+                    <div class="nav-list">
+                        <button id="nav-CASO_01" class="nav-btn active" onclick="loadItem('CASO_01')">
+                            <span>01_RAPPORTO_POLIZIA.DOC</span>
+                            <span class="tag fbi">EVIDENZA</span>
+                        </button>
+                        <button id="nav-CASO_02" class="nav-btn" onclick="loadItem('CASO_02')">
+                            <span>02_INTERROGATORI.DOC</span>
+                            <span class="tag fbi">EVIDENZA</span>
+                        </button>
+                        <button id="nav-CASO_03" class="nav-btn" onclick="loadItem('CASO_03')">
+                            <span>03_PROVE_SCIENTIFICHE.DOC</span>
+                            <span class="tag fbi">EVIDENZA</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION B: Riddler Phase 1 (3 Indovinelli) -->
+                <div id="section-riddler-p1" style="display:none;">
+                    <div class="sidebar-section-title">ENIGMI FASE 1</div>
+                    <div class="nav-list">
+                        <button id="nav-E1" class="nav-btn" onclick="loadItem('E1')">
+                            <span>ENIGMA_01.DED</span>
+                            <span id="tag-E1" class="tag open">OPEN</span>
+                        </button>
+                        <button id="nav-E2" class="nav-btn" onclick="loadItem('E2')">
+                            <span>ENIGMA_02.DED</span>
+                            <span id="tag-E2" class="tag open">OPEN</span>
+                        </button>
+                        <button id="nav-E3" class="nav-btn" onclick="loadItem('E3')">
+                            <span>ENIGMA_03.DED</span>
+                            <span id="tag-E3" class="tag open">OPEN</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION C: Riddler Phase 2 (2 Enigmi Logici) -->
+                <div id="section-riddler-p2" style="display:none;">
+                    <div class="sidebar-section-title">ENIGMI FASE 2</div>
+                    <div class="nav-list">
+                        <button id="nav-E4" class="nav-btn disabled" onclick="loadItem('E4')">
+                            <span>ENIGMA_04.DED</span>
+                            <span id="tag-E4" class="tag locked">LOCKED</span>
+                        </button>
+                        <button id="nav-E5" class="nav-btn disabled" onclick="loadItem('E5')">
+                            <span>ENIGMA_05.DED</span>
+                            <span id="tag-E5" class="tag locked">LOCKED</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION D: Enigma Extra -->
+                <div id="section-riddler-p3" style="display:none;">
+                    <div class="sidebar-section-title">ENIGMI EXTRA</div>
+                    <div class="nav-list">
+                        <button id="nav-E6" class="nav-btn disabled" onclick="loadItem('E6')">
+                            <span>ENIGMA_06.DED</span>
+                            <span id="tag-E6" class="tag locked">LOCKED</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="audio-btn" onclick="toggleAudio()">
+                    🔊 AUDIO FX: <span id="audio-status">ATTIVO</span>
+                </button>
+            </div>
+
+            <!-- Viewer Panel -->
+            <div class="viewer-panel">
+                <div class="viewer-header">
+                    <span id="viewer-filename">01_RAPPORTO_POLIZIA.DOC</span>
+                    <span class="stamp-mark" id="stamp-text">RISERVATO FBI</span>
+                </div>
+                <div class="file-text-area" id="file-content">
+                    Caricamento archivio in corso...
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Input Bar -->
+        <div class="terminal-box" id="terminal-box">
+            <div class="terminal-label" id="terminal-label">&gt; ACCUSA FINALE OMICIDIO BLACKWOOD - NOME DEL COLPEVOLE:</div>
+            <div class="terminal-form">
+                <div class="terminal-input-wrapper">
+                    <span class="prompt-symbol" id="prompt-symbol">vance@fbi-dept:~$</span>
+                    <input type="text" id="solution-input" class="terminal-input" placeholder="Immetti il nome esatto del colpevole..." autocomplete="off">
+                </div>
+                <button class="submit-btn" id="submit-btn" onclick="verifyInput()">INVIA FORMALE ACCUSA</button>
+            </div>
+            <div class="feedback-line" id="feedback-message"></div>
+        </div>
+    </div>
+
+    <!-- 3. POPUP MODALE VIDEO OVERRIDE DELL'ENIGMISTA -->
+    <div class="riddler-video-overlay" id="riddler-vox-modal">
+        <div class="riddler-video-card">
+            <div class="glitch-text">/// INTERCETTAZIONE SEGNALE CRITTOGRAFATO ///</div>
+            <div class="video-feed-box">
+                <canvas id="riddler-canvas"></canvas>
+            </div>
+            <div class="subtitles-box" id="riddler-subtitles">
+                Inizializzazione trasmissione in corso...
+            </div>
+            <button class="submit-btn" style="background: var(--riddler-green); color: #000; padding: 12px;" onclick="closeRiddlerVox()">ACCETTA LA SFIDA</button>
+        </div>
+    </div>
+
+    <!-- Generic Modal Dialog -->
+    <div class="unlock-overlay" id="unlock-modal">
+        <div class="unlock-card" id="modal-card">
+            <div class="unlock-title" id="modal-title">/// NOTIFICA DI SISTEMA ///</div>
+            <div class="unlock-text" id="modal-text">Messaggio.</div>
+            <button class="submit-btn" style="padding: 10px 25px;" onclick="closeModal()">CONTINUA</button>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio Synthesizer Engine
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function playSound(freq = 800, duration = 0.05, type = "sine") {
+            if (!audioEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playGlitchSound() {
+            if (!audioEnabled) return;
+            playSound(150, 0.1, "sawtooth");
+            setTimeout(() => playSound(1200, 0.08, "square"), 40);
+            setTimeout(() => playSound(300, 0.15, "sawtooth"), 90);
+        }
+
+        function playErrorSound() {
+            if (!audioEnabled) return;
+            playSound(180, 0.2, "sawtooth");
+        }
+
+        function playSuccessSound() {
+            if (!audioEnabled) return;
+            playSound(523, 0.08, "triangle");
+            setTimeout(() => playSound(659, 0.08, "triangle"), 70);
+            setTimeout(() => playSound(783, 0.2, "triangle"), 140);
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-status').innerText = audioEnabled ? "ATTIVO" : "DISATTIVATO";
+            if (audioEnabled) playSound(1000, 0.08);
+        }
+
+        function flipCard() {
+            const container = document.getElementById('e6-card-container');
+            if(container) {
+                container.classList.toggle('flipped');
+                playSound(600, 0.05);
+            }
+        }
+
+        // Database Content
+        const database = {
+            "CASO_01": {
+                mode: "fbi",
+                title: "01_RAPPORTO_POLIZIA.DOC",
+                stamp: "EVIDENZA UFFICIALE",
+                content: `============================================================
+DOSSIER OMICIDIO BLACKWOOD HALL #2026-88X
+============================================================
+VITTIMA: Lord Arthur Blackwood (Anni 58)
+LUOGO: Dimora Blackwood Hall, Studio Privato
+ORA DEL DECESSO ESTIMATA: Tra le 22:30 e le 23:15
+
+SINTESI DELLA SCENA DEL CRIMINE:
+La vittima è stata trovata riversa sulla propria scrivania in mogano.
+Causa del decesso: Avvelenamento acuto da Cianuro di Potassio, somministrato attraverso il bicchiere di brandy.
+
+Dettagli Rilevati sulla Scena:
+- Un orologio da tasca in oro fermo esattamente sulle 23:02 (vetro frantumato nella caduta).
+- Il caminetto era acceso.
+- Una bottiglia di brandy d'epoca aperta ma priva di sostanze tossiche (il veleno era solo nel bicchiere personale).
+- Nessun segno di effrazione. Il killer era un ospite o un residente.`
+            },
+            "CASO_02": {
+                mode: "fbi",
+                title: "02_INTERROGATORI.DOC",
+                stamp: "RISERVATO FBI",
+                content: `============================================================
+INTERROGATORI SOSPETTATI
+============================================================
+
+1. LADY ELEANOR BLACKWOOD (Moglie)
+   - ALIBI: Dichiara di essere stata nella biblioteca dell'ala ovest fino alle 23:00.
+   - MOVENTE: Imminente revisione del testamento che l'avrebbe esclusa.
+   - NOTE: Comportamento freddo. Ha la passione per la botanica e piante velenose.
+
+2. JARVIS (Maggiordomo)
+   - ALIBI: Ha servito il brandy alle 22:15 e si è ritirato nelle cucine.
+   - MOVENTE: Nessun beneficio finanziario.
+   - NOTE: Lavora nella dimora da 30 anni. Servizievole.
+
+3. DOTTOR STERLING (Ospite & Medico di Famiglia)
+   - ALIBI: Rimanere nel salotto ospiti a preparare borse mediche.
+   - MOVENTE: Lord Blackwood aveva scoperto una grave frode medica da lui condotta.
+   - NOTE: Ampio accesso a reagenti chimici e sostanze letali.`
+            },
+            "CASO_03": {
+                mode: "fbi",
+                title: "03_PROVE_SCIENTIFICHE.DOC",
+                stamp: "ANALISI FORENSE",
+                content: `============================================================
+REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
+============================================================
+
+<div class="ascii-art">
+   +-------------------------------------------------------+
+   |  [BIBLIOTECA] <---> [SALOTTO OSPITI] <---> [CUCINA]   |
+   |                          |                            |
+   |                  [STUDIO PRIVATO]                     |
+   |              (Scena del Crimine: 23:02)                |
+   +-------------------------------------------------------+
+</div>
+
+REPERTO A:
+- Impronte n. 42 rinvenute vicino allo studio. Corrispondono al Dottor Sterling.
+
+REPERTO B:
+- Tracce di veleno chimico sintetico sequestrate tra il materiale del Dott. Sterling.
+
+[NOTA OPERATIVA]:
+Digita il NOME DEL COLPEVOLE nel terminale sottostante per completare l'indagine FBI!`
+            },
+
+            // --- FASE 1: 3 INDOVINELLI SEMPLICI ---
+            "E1": { 
+                mode: "riddler", 
+                title: "ENIGMA_01.DED", 
+                answer: "BLU", 
+                content: `[ENIGMISTA]: "Dimmi, Agente F... la tua mente è abbastanza capace per un semplice indovinello, o devo prepararmi a una cocente delusione?"\n\n<div class="riddle-card">ENIGMA 01:\nSono il colore del cielo sereno e del mare profondo. In inglese posso esprimo anche un genere musicale che risuona nell'anima.\n\nChe colore sono?</div>` 
+            },
+            "E2": { 
+                mode: "riddler", 
+                title: "ENIGMA_02.DED", 
+                answer: "TIRAMISU", 
+                content: `[ENIGMISTA]: "Notevole Agente F. Ma non illuderti: riscaldare i muscoli non significa vincere la gara. Vediamo come te la cavi ora..."\n\n<div class="riddle-card">ENIGMA 02:\n"Bagnato nel nero, vestito di bianco, ti do una carica e non resti più stanco. Se la giornata ti lascia deluso, ti tiro su...il morale.\n\nChe cosa sono?</div>`
+            },
+            "E3": { 
+                mode: "riddler", 
+                title: "ENIGMA_03.DED", 
+                answer: "13", 
+                content: `[ENIGMISTA]: "Sei astuta, Agente F, te lo concedo. Ma l'illusione di poter vincere finisce qui. Nessuno supera in astuzia l'Enigmista..."\n\n<div class="riddle-card">ENIGMA 03:\nHo due bacchette, ma non sono quelle del sushi. Ho tanti piatti, ma non ci puoi mangiare dentro. Ho persino dei pedali, ma non sono una bicicletta!\n\nChe cosa sono?</div>` 
+            },
+
+            // --- FASE 2: 2 ENIGMI LOGICI ---
+            "E4": { 
+                mode: "riddler", 
+                title: "ENIGMA_04.DED", 
+                answer: "13", 
+                content: `[ENIGMISTA]: "Ammirevole, Agente F! Ma non festeggiare troppo presto: hai risolto solo un tassello del puzzle. Il vero tranello mentale ti aspetta proprio adesso..."\n\n<div class="riddle-card">ENIGMA 04:\nUn autobus parte dal capolinea con 12 passeggeri. Alla prima fermata ne scendono 8 e ne salgono 4.\nAlla seconda fermata ne scendono 6 e ne salgono 10.\n\nQuante persone ci sono ora sull’autobus?</div>` 
+            },
+            "E5": { 
+                mode: "riddler", 
+                title: "ENIGMA_05.DED", 
+                answer: "CALORE", 
+                content: `[ENIGMISTA]: "Complimenti per il successo temporaneo, Agente F! Ma goditi il momento, perché l'illusione di essere al mio livello finisce esattamente ora. Questo enigma piegherà anche la mente più brillante!"\n\n<div class="riddle-card">ENIGMA 05:\nCi sono tre interruttori fuori da una stanza chiusa, solo uno accende la lampadina dentro.\nPuoi toccarli quanto vuoi, ma puoi entrare nella stanza una sola volta.\n\nQual è la chiave per trovare l'interruttore giusto?</div>` 
+            },
+
+            // --- ENIGMA EXTRA CON CARD FLIP 3D E SOLUZIONE SEGRETA ---
+            "E6": { 
+                mode: "riddler", 
+                title: "ENIGMA_06.DED", 
+                answer: "GB 10:12 [16], RO 8:1 [24], SL 130:5 [7], 1CO 13:4 [11]", 
+                content: `[ENIGMISTA]: "L'apparenza inganna, Agente F. Guarda oltre i limiti..."\n\n<div class="e6-layout">\n  <div class="card-flip-container" id="e6-card-container" onclick="flipCard()">\n    <div class="card-flipper">\n      <div class="card-front">\n        <img src="FeB.jpeg" alt="Immagine Enigma 6">\n      </div>\n      <div class="card-back">\n        <div class="card-back-text">GUARDA DIETRO</div>\n      </div>\n    </div>\n  </div>\n\n  <div class="e6-clues-panel">\n    <div class="e6-clues-header">/// DECODIFICA INDIZI & CODICI ///</div>\n    \n    <div class="clue-row">\n      <span class="clue-num">1.</span> ____________ &nbsp; - &nbsp; 1Gv 4:16 [107] &nbsp;….&nbsp; Is 6:8 [10] &nbsp;-&nbsp; Pr 31:10 [8] &nbsp;….&nbsp; Pr 4:23 [6] &nbsp;-&nbsp; Fl 4:4 [12] &nbsp;….&nbsp; Gr 29:13 [29] &nbsp;-&nbsp; Ga 2:20 [58]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">2.</span> ___________ &nbsp;&nbsp;&nbsp; <span class="clue-num">3.</span> ___________ &nbsp; - &nbsp; Is 60:1 [33] &nbsp;-&nbsp; Sl 51:10 [22] &nbsp;-&nbsp; Ge 15:1 [89]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">4.</span> ___________ &nbsp; - &nbsp; Ca 6:10 [?]\n    </div>\n  </div>\n</div>` 
+            }
+        };
+
+        // App States
+        let isLoggedIn = false;
+        let currentMode = "fbi";
+        let currentItemKey = "CASO_01";
+        let phase1Unlocked = false;
+        let phase2Unlocked = false;
+        let extraUnlocked = false;
+        let caseSolved = false;
+        let riddlerVoxPlayed = false;
+        const solvedRiddles = new Set();
+
+        // 1. LOGIN SYSTEM
+        function performLogin() {
+            const agent = document.getElementById('login-agent').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if (agent && pass) {
+                playSuccessSound();
+                isLoggedIn = true;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                loadItem('CASO_01');
+            } else {
+                playErrorSound();
+                document.getElementById('login-error').innerText = "[ERRORE LOGIN] Inserisci identificativo e codice validi.";
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            playSound(400, 0.1);
+        }
+
+        // 3. RIDDLER TOGGLE & FIRST TIME VIDEO OVERRIDE
+        function handleRiddlerToggle() {
+            if (!riddlerVoxPlayed) {
+                riddlerVoxPlayed = true;
+                triggerRiddlerVoxModal();
+            } else {
+                toggleRiddlerMode();
+            }
+        }
+
+        function triggerRiddlerVoxModal() {
+            playGlitchSound();
+            document.getElementById('riddler-vox-modal').style.display = 'flex';
+            startCanvasAnimation();
+            playSpeechSynthesis();
+        }
+
+        function closeRiddlerVox() {
+            document.getElementById('riddler-vox-modal').style.display = 'none';
+            if (window.riddlerAnimLoop) cancelAnimationFrame(window.riddlerAnimLoop);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            toggleRiddlerMode();
+        }
+
+        // Glitch Avatar Canvas Generator
+        function startCanvasAnimation() {
+            const canvas = document.getElementById('riddler-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 400;
+            canvas.height = 200;
+
+            let frame = 0;
+            function draw() {
+                ctx.fillStyle = '#05020a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = (frame % 6 === 0) ? '#a82eff' : '#00ff66';
+                ctx.font = 'bold 110px monospace';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#00ff66';
+                ctx.shadowBlur = 15;
+                ctx.fillText('?', canvas.width / 2 + (Math.random() * 4 - 2), 140 + (Math.random() * 4 - 2));
+
+                ctx.strokeStyle = '#00ff66';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < canvas.width; i += 8) {
+                    let h = Math.sin(frame * 0.15 + i) * 25 + Math.random() * 15;
+                    ctx.moveTo(i, canvas.height);
+                    ctx.lineTo(i, canvas.height - h);
+                }
+                ctx.stroke();
+
+                frame++;
+                window.riddlerAnimLoop = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // Speech Synthesis
+        function playSpeechSynthesis() {
+            const text = "Salve Agente F, sei pronta a giocare al mio gioco? Sarai in grado di risolvere questi semplici enigmi? O farai la fine del pipistrello...AHAHAHA";
+            document.getElementById('riddler-subtitles').innerText = text;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'it-IT';
+                utter.pitch = 0.3;
+                utter.rate = 0.85;
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        // Mode Switching Logic
+        function toggleRiddlerMode() {
+            playGlitchSound();
+            document.body.classList.add('glitch-flash');
+            setTimeout(() => document.body.classList.remove('glitch-flash'), 350);
+
+            if (currentMode === "fbi") {
+                currentMode = "riddler";
+                document.body.classList.add('riddler-mode');
+                document.getElementById('app-badge').innerText = "?";
+                document.getElementById('app-title').innerText = "ENIGMISTA";
+                document.getElementById('app-subtext').innerText = "??? // SISTEMA COMPROMESSO";
+                document.getElementById('mode-status-badge').innerText = "SYSTEM HACKED";
+
+                document.getElementById('section-fbi').style.display = 'none';
+                document.getElementById('section-riddler-p1').style.display = 'block';
+                document.getElementById('section-riddler-p2').style.display = 'block';
+                document.getElementById('section-riddler-p3').style.display = 'block';
+
+                loadItem('E1');
+            } else {
+                currentMode = "fbi";
+                document.body.classList.remove('riddler-mode');
+                document.getElementById('app-badge').innerText = "FBI";
+                document.getElementById('app-title').innerText = "FBI WORKSTATION // AGENTE F";
+                document.getElementById('app-subtext').innerText = "DATABASE - DIVISIONE INVESTIGATIVA DI AUSTIN";
+                document.getElementById('mode-status-badge').innerText = "SYSTEM SERVER";
+
+                document.getElementById('section-fbi').style.display = 'block';
+                document.getElementById('section-riddler-p1').style.display = 'none';
+                document.getElementById('section-riddler-p2').style.display = 'none';
+                document.getElementById('section-riddler-p3').style.display = 'none';
+
+                loadItem('CASO_01');
+            }
+        }
+
+        function updateProgressState() {
+            const remaining = 6 - solvedRiddles.size;
+            document.getElementById('unsolved-count').innerText = remaining;
+
+            // Sblocca Fase 2 dopo E1, E2, E3
+            if (!phase1Unlocked && solvedRiddles.has('E1') && solvedRiddles.has('E2') && solvedRiddles.has('E3')) {
+                phase1Unlocked = true;
+                ['E4', 'E5'].forEach(id => {
+                    const btn = document.getElementById(`nav-${id}`);
+                    if (btn) {
+                        btn.classList.remove('disabled');
+                        document.getElementById(`tag-${id}`).className = "tag open";
+                        document.getElementById(`tag-${id}`).innerText = "OPEN";
+                    }
+                });
+                showModal("/// FASE 1 COMPLETATA ///", "Hai risolto i primi 3 indovinelli! La Fase 2 è ora sbloccata.", false);
+                playSuccessSound();
+            }
+
+            // Sblocca E6 (Extra) dopo E4 e E5
+            if (!phase2Unlocked && phase1Unlocked && solvedRiddles.has('E4') && solvedRiddles.has('E5')) {
+                phase2Unlocked = true;
+                const e6Btn = document.getElementById('nav-E6');
+                if (e6Btn) {
+                    e6Btn.classList.remove('disabled');
+                    document.getElementById('tag-E6').className = "tag open";
+                    document.getElementById('tag-E6').innerText = "OPEN";
+                }
+                showModal("/// FASE 2 COMPLETATA ///", "Hai sueprato ogni mio enigma! Ma non ancora finita....", false);
+                playSuccessSound();
+            }
+        }
+
+        function loadItem(key) {
+            if ((key === 'E4' || key === 'E5') && !phase1Unlocked) {
+                playErrorSound();
+                showFeedback("[ACCESSO NEGATO] Completa prima gli indovinelli della Fase 1!", "error");
+                return;
+            }
+
+            if (key === 'E6' && !phase2Unlocked) {
+                playErrorSound();
+                showFeedback("[ACCESSO NEGATO] Completa prima gli enigmi della Fase 2!", "error");
+                return;
+            }
+
+            playSound(900, 0.03);
+            currentItemKey = key;
+
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`nav-${key}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const item = database[key];
+            document.getElementById('viewer-filename').innerText = item.title;
+            document.getElementById('stamp-text').innerText = item.stamp || (item.mode === "fbi" ? "RISERVATO FBI" : "ENIGMISTA OVERRIDE");
+
+            const contentDisplay = document.getElementById('file-content');
+            contentDisplay.innerHTML = "";
+            let textToRender = item.content;
+
+            if (item.mode === "riddler" && solvedRiddles.has(key)) {
+                if (key === "E6") {
+                    textToRender += `<br><br><strong style="color:var(--fbi-gold); font-size:1.1rem;">[STATO ENIGMA: RISOLTO ✔]</strong> &nbsp;&nbsp;&nbsp; <span style="color:var(--riddler-green); font-weight:bold; font-size:1.1rem;">complimenti!! ora scrivimi...</span>`;
+                } else {
+                    textToRender += `<br><br><strong style="color:var(--fbi-gold); font-size:1.1rem;">[STATO ENIGMA: RISOLTO ✔]</strong>`;
+                }
+            }
+
+            let charIndex = 0;
+            if (window.typewriterLoop) clearInterval(window.typewriterLoop);
+
+            window.typewriterLoop = setInterval(() => {
+                if (charIndex < textToRender.length) {
+                    if (textToRender[charIndex] === '<') {
+                        let endTag = textToRender.indexOf('>', charIndex);
+                        if (endTag !== -1) charIndex = endTag + 1;
+                    }
+                    contentDisplay.innerHTML = textToRender.substring(0, charIndex);
+                    charIndex++;
+                    if (charIndex % 12 === 0) playSound(1100, 0.01);
+                } else {
+                    contentDisplay.innerHTML = textToRender;
+                    clearInterval(window.typewriterLoop);
+                }
+            }, 6);
+
+            const termLabel = document.getElementById('terminal-label');
+            const termInput = document.getElementById('solution-input');
+            const promptSym = document.getElementById('prompt-symbol');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (currentMode === "fbi") {
+                termLabel.innerText = "> ACCUSA FINALE OMICIDIO BLACKWOOD - NOME DEL COLPEVOLE:";
+                promptSym.innerText = "effe@fbi-dept:~$";
+                termInput.placeholder = "Digita il nome del colpevole (es. DOTTOR STERLING)...";
+                termInput.disabled = caseSolved;
+                submitBtn.innerText = "INVIA";
+                submitBtn.disabled = caseSolved;
+                if (caseSolved) termInput.placeholder = "CASO RISOLTO CON SUCCESSO!";
+            } else {
+                termLabel.innerText = `> SOLUZIONE ${item.title} - DIGITA LA RISPOSTA:`;
+                promptSym.innerText = "riddler@override:~$";
+                termInput.placeholder = "Immetti la soluzione dell'enigma...";
+                submitBtn.innerText = "INVIA RISPOSTA";
+
+                if (item.mode === "riddler") {
+                    termInput.disabled = solvedRiddles.has(key);
+                    submitBtn.disabled = solvedRiddles.has(key);
+                    if (solvedRiddles.has(key)) termInput.placeholder = "ENIGMA GIA' RISOLTO!";
+                }
+            }
+
+            document.getElementById('feedback-message').innerText = "";
+            termInput.value = "";
+        }
+
+        function verifyInput() {
+            const inputEl = document.getElementById('solution-input');
+            const val = inputEl.value.trim().toUpperCase();
+
+            if (!val) {
+                playErrorSound();
+                showFeedback("[ERRORE] Inserisci un testo prima di inviare.", "error");
+                return;
+            }
+
+            if (currentMode === "fbi") {
+                if (val.includes("STERLING") || val.includes("DOTTOR STERLING")) {
+                    caseSolved = true;
+                    playSuccessSound();
+                    showFeedback("[CASO RISOLTO!] Accusa confermata: Il Dottor Sterling è stato arrestato!", "success");
+
+                    showModal(
+                        "★ CASO BLACKWOOD RISOLTO ★",
+                        "Eccellente lavoro Agente Vance! Grazie alle prove e alla tua deduzione logica, il Dottor Sterling è stato assicurato alla giustizia!",
+                        true
+                    );
+
+                    inputEl.disabled = true;
+                    document.getElementById('submit-btn').disabled = true;
+                } else {
+                    playErrorSound();
+                    showFeedback(`[ACCUSA RESPINTA] Le prove contro "${val}" non sono sufficienti. Riesamina i dossier!`, "error");
+                    shakeTerminal();
+                }
+            } else {
+                const item = database[currentItemKey];
+                if (!item || item.mode !== "riddler") return;
+
+                let isE6Correct = false;
+                if (currentItemKey === "E6") {
+                    if (
+                        val === "GB 10:12 [16], RO 8:1 [24], SL 130:5 [7], 1CO 13:4 [11]" ||
+                        val.includes("GB 10:12") ||
+                        val.includes("RO 8:1") ||
+                        val.includes("SL 130:5") ||
+                        val.includes("1CO 13:4")
+                    ) {
+                        isE6Correct = true;
+                    }
+                }
+
+                if (val === item.answer || isE6Correct) {
+                    playSuccessSound();
+                    solvedRiddles.add(currentItemKey);
+
+                    const btn = document.getElementById(`nav-${currentItemKey}`);
+                    if (btn) btn.classList.add('solved');
+                    const tag = document.getElementById(`tag-${currentItemKey}`);
+                    if (tag) {
+                        tag.className = "tag solved";
+                        tag.innerText = "SOLVED ✔";
+                    }
+
+                    showFeedback(`[ESATTO!] Risposta corretta!`, "success");
+
+                    if (currentItemKey === "E6") {
+                        showModal(
+                            "🎉 COMPLIMENTI!! 🎉",
+                            "complimenti!! ora scrivimi...",
+                            true
+                        );
+                        loadItem(currentItemKey);
+                        updateProgressState();
+                    } else {
+                        loadItem(currentItemKey);
+                        updateProgressState();
+                    }
+                } else {
+                    playErrorSound();
+                    showFeedback(`[ERRATO] "${val}" non è la risposta corretta. L'Enigmista ride di te!`, "error");
+                    shakeTerminal();
+                }
+            }
+        }
+
+        function shakeTerminal() {
+            const box = document.getElementById('terminal-box');
+            box.classList.add('glitch-shake');
+            setTimeout(() => box.classList.remove('glitch-shake'), 350);
+        }
+
+        function showFeedback(msg, type) {
+            const el = document.getElementById('feedback-message');
+            el.className = `feedback-line ${type}`;
+            el.innerText = msg;
+        }
+
+        function showModal(title, text, isFbiWin = false) {
+            const card = document.getElementById('modal-card');
+            card.className = isFbiWin ? "unlock-card fbi-win" : "unlock-card";
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            document.getElementById('unlock-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('unlock-modal').style.display = 'none';
+        }
+
+        // Event Listeners
+        window.onload = function() {
+            const inputEl = document.getElementById('solution-input');
+            inputEl.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+                playSound(750, 0.015);
+            });
+
+            inputEl.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') verifyInput();
+            });
+
+            const loginInputs = document.querySelectorAll('.login-card input');
+            loginInputs.forEach(inp => {
+                inp.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') performLogin();
+                });
+            });
+        };
+    </script>
+</body>
+</html>
