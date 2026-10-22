@@ -1299,7 +1299,7 @@ REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
                 mode: "riddler", 
                 title: "ENIGMA_EXTRA_01.DED", 
                 answer: "GB 10:12 [16], RO 8:1 [24], SL 130:5 [7], 1CO 13:4 [11]", 
-                content: `[ENIGMISTA]: "L'apparenza inganna, Agente F. Guarda oltre i limiti..."\n\n<div class="e6-layout">\n  <div class="card-flip-container" id="e6-card-container" onclick="flipCard()">\n    <div class="card-flipper">\n      <div class="card-front">\n        <img src="FeB.jpeg" alt="Immagine Enigma 6">\n      </div>\n      <div class="card-back">\n        <div class="card-back-text">GUARDA DIETRO</div>\n      </div>\n    </div>\n  </div>\n\n  <div class="e6-clues-panel">\n    <div class="e6-clues-header">/// DECODIFICA INDIZI & CODICI ///</div>\n    \n    <div class="clue-row">\n      <span class="clue-num">1.</span> ____________ &nbsp; - &nbsp; 1Gv 4:16 [107] &nbsp;….&nbsp; Is 6:8 [10] &nbsp;-&nbsp; Pr 31:10 [8] &nbsp;….&nbsp; Pr 4:23 [6] &nbsp;-&nbsp; Fl 4:4 [12] &nbsp;….&nbsp; Gr 29:13 [29] &nbsp;-&nbsp; Ga 2:20 [58]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">2.</span> ___________ &nbsp;&nbsp;&nbsp; <span class="clue-num">3.</span> ___________ &nbsp; - &nbsp; Is 60:1 [33] &nbsp;-&nbsp; Sl 51:10 [22] &nbsp;-&nbsp; Ge 15:1 [89]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">4.</span> ___________ &nbsp; - &nbsp; Ca 6:10 [?]\n    </div>\n  </div>\n</div>` 
+                content: `[ENIGMISTA]: "L'apparenza inganna, Agente F. Guarda oltre i limits..."\n\n<div class="e6-layout">\n  <div class="card-flip-container" id="e6-card-container" onclick="flipCard()">\n    <div class="card-flipper">\n      <div class="card-front">\n        <img src="FeB.jpeg" alt="Immagine Enigma 6">\n      </div>\n      <div class="card-back">\n        <div class="card-back-text">GUARDA DIETRO</div>\n      </div>\n    </div>\n  </div>\n\n  <div class="e6-clues-panel">\n    <div class="e6-clues-header">/// DECODIFICA INDIZI & CODICI ///</div>\n    \n    <div class="clue-row">\n      <span class="clue-num">1.</span> ____________ &nbsp; - &nbsp; 1Gv 4:16 [107] &nbsp;….&nbsp; Is 6:8 [10] &nbsp;-&nbsp; Pr 31:10 [8] &nbsp;….&nbsp; Pr 4:23 [6] &nbsp;-&nbsp; Fl 4:4 [12] &nbsp;….&nbsp; Gr 29:13 [29] &nbsp;-&nbsp; Ga 2:20 [58]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">2.</span> ___________ &nbsp;&nbsp;&nbsp; <span class="clue-num">3.</span> ___________ &nbsp; - &nbsp; Is 60:1 [33] &nbsp;-&nbsp; Sl 51:10 [22] &nbsp;-&nbsp; Ge 15:1 [89]\n    </div>\n    \n    <div class="clue-row">\n      <span class="clue-num">4.</span> ___________ &nbsp; - &nbsp; Ca 6:10 [?]\n    </div>\n  </div>\n</div>` 
             }
         };
 
@@ -1342,6 +1342,8 @@ REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
         function handleRiddlerToggle() {
             if (!riddlerVoxPlayed) {
                 riddlerVoxPlayed = true;
+                // Salva che il video dell'Enigmista è già stato riprodotto
+                localStorage.setItem('riddler_vox_played', 'true');
                 triggerRiddlerVoxModal();
             } else {
                 toggleRiddlerMode();
@@ -1482,6 +1484,57 @@ REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
             }
         }
 
+        // CARICAMENTO PROGRESSI E STATO ENIGMISTA SALVATI IN LOCALSTORAGE
+        function loadSavedProgress() {
+            // Controlla se l'intro parlata dell'Enigmista è già stata vista
+            if (localStorage.getItem('riddler_vox_played') === 'true') {
+                riddlerVoxPlayed = true;
+            }
+
+            // Carica gli enigmi risolti
+            const savedData = localStorage.getItem('fbi_solved_riddles');
+            if (savedData) {
+                try {
+                    const parsedArray = JSON.parse(savedData);
+                    parsedArray.forEach(key => {
+                        solvedRiddles.add(key);
+                        const btn = document.getElementById(`nav-${key}`);
+                        if (btn) btn.classList.add('solved');
+                        const tag = document.getElementById(`tag-${key}`);
+                        if (tag) {
+                            tag.className = "tag solved";
+                            tag.innerText = "SOLVED ✔";
+                        }
+                    });
+
+                    // Ripristina sblocchi fasi
+                    if (solvedRiddles.has('E1') && solvedRiddles.has('E2') && solvedRiddles.has('E3')) {
+                        phase1Unlocked = true;
+                        ['E4', 'E5'].forEach(id => {
+                            const btn = document.getElementById(`nav-${id}`);
+                            if (btn) {
+                                btn.classList.remove('disabled');
+                                document.getElementById(`tag-${id}`).className = "tag open";
+                                document.getElementById(`tag-${id}`).innerText = "OPEN";
+                            }
+                        });
+                    }
+
+                    if (solvedRiddles.has('E4') && solvedRiddles.has('E5')) {
+                        phase2Unlocked = true;
+                        const e6Btn = document.getElementById('nav-E6');
+                        if (e6Btn) {
+                            e6Btn.classList.remove('disabled');
+                            document.getElementById('tag-E6').className = "tag open";
+                            document.getElementById('tag-E6').innerText = "OPEN";
+                        }
+                    }
+
+                    document.getElementById('unsolved-count').innerText = 6 - solvedRiddles.size;
+                } catch (e) {}
+            }
+        }
+
         function loadItem(key) {
             if ((key === 'E4' || key === 'E5') && !phase1Unlocked) {
                 playErrorSound();
@@ -1616,6 +1669,9 @@ REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
                     playSuccessSound();
                     solvedRiddles.add(currentItemKey);
 
+                    // SALVATAGGIO AUTOMATICO NEL LOCALSTORAGE
+                    localStorage.setItem('fbi_solved_riddles', JSON.stringify(Array.from(solvedRiddles)));
+
                     const btn = document.getElementById(`nav-${currentItemKey}`);
                     if (btn) btn.classList.add('solved');
                     const tag = document.getElementById(`tag-${currentItemKey}`);
@@ -1672,6 +1728,9 @@ REPERTI SCIENTIFICI & MAPPA SCENA DEL CRIMINE
 
         // Event Listeners
         window.onload = function() {
+            // Carica i progressi salvati in precedenza all'avvio
+            loadSavedProgress();
+
             const inputEl = document.getElementById('solution-input');
             inputEl.addEventListener('input', function() {
                 this.value = this.value.toUpperCase();
